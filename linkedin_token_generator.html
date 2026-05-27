@@ -60,7 +60,7 @@
 <script>
 const CLIENT_ID = '77vb0yhozwf5s1';
 const CLIENT_SECRET = 'WPL_AP1.54DB6has72SbrD0y.T6ODxA==';
-const REDIRECT_URI = 'https://freyart2023.github.io/linkedin-tool/linkedin_token_generator.html';
+const REDIRECT_URI = 'https://freyart2023.github.io/linkedin_token_generator.html/linkedin_token_generator.html';
 const SCOPE = 'openid profile email w_member_social';
 
 function startAuth() {
@@ -102,7 +102,7 @@ if (code) {
   document.getElementById('step1box').style.display = 'none';
   document.getElementById('step2box').style.display = 'block';
   document.getElementById('codeDisplay').textContent = code;
-  const cmd = `curl --ssl-no-revoke -X POST "https://www.linkedin.com/oauth/v2/accessToken" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=authorization_code&code=${code}&redirect_uri=https://freyart2023.github.io/linkedin-tool/linkedin_token_generator.html&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}"`;
+  const cmd = `curl --ssl-no-revoke -X POST "https://www.linkedin.com/oauth/v2/accessToken" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=authorization_code&code=${code}&redirect_uri=https://freyart2023.github.io/linkedin_token_generator.html/linkedin_token_generator.html&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}"`;
   document.getElementById('curlCommand').value = cmd;
 }
 </script>
