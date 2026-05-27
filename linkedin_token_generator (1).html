@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Acorn - LinkedIn Token Generator</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #0E0D0B; color: #f0ece2; padding: 40px; max-width: 700px; margin: 0 auto; }
+  h1 { color: #D4572A; }
+  .box { background: #1a1916; border: 1px solid #333; border-radius: 10px; padding: 24px; margin: 20px 0; }
+  label { display: block; margin-bottom: 6px; color: #aaa; font-size: 13px; }
+  input { width: 100%; padding: 10px; background: #111; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 14px; box-sizing: border-box; margin-bottom: 16px; }
+  button { background: #D4572A; color: white; border: none; padding: 12px 28px; border-radius: 6px; font-size: 15px; cursor: pointer; width: 100%; margin-top: 6px; }
+  button:hover { background: #b8441f; }
+  .step { background: #1a1916; border-left: 3px solid #D4572A; padding: 12px 16px; margin: 10px 0; border-radius: 0 6px 6px 0; }
+  .step strong { color: #D4572A; }
+  .token-box { background: #0a0a0a; padding: 12px; border-radius: 6px; font-size: 12px; color: #4ade80; margin: 10px 0; word-break: break-all; }
+  .success { background: #103a10; border: 1px solid #4ade80; color: #4ade80; padding: 12px; border-radius: 6px; margin-top: 12px; }
+  .code-box { background: #0a0a0a; padding: 12px; border-radius: 6px; font-size: 11px; color: #D4572A; margin: 10px 0; word-break: break-all; }
+  textarea { width: 100%; padding: 10px; background: #111; border: 1px solid #444; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box; height: 80px; }
+  .green-btn { background: #4ade80; color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 8px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>🌰 Smart Acorn</h1>
+<h2 style="color:#f0ece2">LinkedIn Token Generator</h2>
+
+<!-- STEP 1 -->
+<div class="box" id="step1box">
+  <div class="step"><strong>Step 1:</strong> Click below to authorize with LinkedIn</div>
+  <br>
+  <button onclick="startAuth()">🔐 Connect to LinkedIn</button>
+</div>
+
+<!-- STEP 2 - shown after redirect -->
+<div class="box" id="step2box" style="display:none">
+  <div class="step"><strong>Step 2:</strong> Authorization code received! ✅</div>
+  <br>
+  <p style="color:#aaa; font-size:13px;">Your authorization code:</p>
+  <div class="code-box" id="codeDisplay"></div>
+  <br>
+  <p style="color:#aaa; font-size:13px;">Now run this command in your Windows Command Prompt to get your access token. The command is ready with your code pre-filled — just copy and run it!</p>
+  <textarea id="curlCommand" readonly></textarea>
+  <button class="green-btn" onclick="copyCommand()">📋 Copy Command</button>
+  <br><br>
+  <p style="color:#aaa; font-size:13px;">Paste the result from the command here:</p>
+  <textarea id="tokenResult" placeholder='Paste the JSON response here e.g. {"access_token":"AQV..."}'></textarea>
+  <button onclick="extractToken()">🔍 Extract My Token</button>
+</div>
+
+<!-- STEP 3 - token display -->
+<div class="box" id="step3box" style="display:none">
+  <div class="success">✅ Your LinkedIn Access Token:</div>
+  <div class="token-box" id="tokenDisplay"></div>
+  <button class="green-btn" onclick="copyToken()">📋 Copy Token</button>
+  <br><br>
+  <p style="color:#aaa; font-size:12px;">⚠️ Save this token somewhere safe — it's valid for 2 months!</p>
+</div>
+
+<script>
+const CLIENT_ID = '77vb0yhozwf5s1';
+const CLIENT_SECRET = 'WPL_AP1.54DB6has72SbrD0y.T6ODxA==';
+const REDIRECT_URI = 'https://freyart2023.github.io/linkedin-tool/linkedin_token_generator.html';
+const SCOPE = 'openid profile email w_member_social';
+
+function startAuth() {
+  const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPE)}`;
+  window.location.href = authUrl;
+}
+
+function copyCommand() {
+  const cmd = document.getElementById('curlCommand').value;
+  navigator.clipboard.writeText(cmd).then(() => alert('Command copied! Now paste it in your Command Prompt.'));
+}
+
+function extractToken() {
+  try {
+    const raw = document.getElementById('tokenResult').value;
+    const data = JSON.parse(raw);
+    if (data.access_token) {
+      document.getElementById('tokenDisplay').textContent = data.access_token;
+      document.getElementById('step3box').style.display = 'block';
+      localStorage.setItem('linkedin_access_token', data.access_token);
+    } else {
+      alert('No access_token found. Error: ' + (data.error_description || JSON.stringify(data)));
+    }
+  } catch(e) {
+    alert('Could not parse response. Make sure you paste the full JSON.');
+  }
+}
+
+function copyToken() {
+  const token = document.getElementById('tokenDisplay').textContent;
+  navigator.clipboard.writeText(token).then(() => alert('Token copied!'));
+}
+
+// Check if redirected back with code
+const urlParams = new URLSearchParams(window.location.search);
+const code = urlParams.get('code');
+if (code) {
+  window.history.replaceState({}, document.title, window.location.pathname);
+  document.getElementById('step1box').style.display = 'none';
+  document.getElementById('step2box').style.display = 'block';
+  document.getElementById('codeDisplay').textContent = code;
+  const cmd = `curl --ssl-no-revoke -X POST "https://www.linkedin.com/oauth/v2/accessToken" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=authorization_code&code=${code}&redirect_uri=https://freyart2023.github.io/linkedin-tool/linkedin_token_generator.html&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}"`;
+  document.getElementById('curlCommand').value = cmd;
+}
+</script>
+</body>
+</html>
